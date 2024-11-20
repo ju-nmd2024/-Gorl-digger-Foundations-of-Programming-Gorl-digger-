@@ -76,10 +76,10 @@ function gameScreen() {
     if (thrustingRight) ax = thrust;
 
     // Update velocity and position
-    vy += ay;
-    vx += ax;
-    y += vy;
-    x += vx;
+    vy += ay;//thrust according to x
+    vx += ax;//thrust according to y
+    y += vy;// movement y
+    x += vx;// movement x
 
     // Reset horizontal acceleration
     ax = 0;
@@ -128,7 +128,7 @@ function mousePressed() {
         }
     }
 }
-
+// reset for the new game
 function resetGame() {
     x = width / 2; // Start position
     y = 50;
@@ -155,7 +155,7 @@ function drawboat(x, y) {
     // Sucking machine (red circle at bottom)
     strokeWeight(2);
     fill(255, 0, 0);
-    ellipse(x + 228, y + 330, 150, 60); // Red part to check collision
+    ellipse(x + 228, y + 330, 150, 60); // Red circle to check collision
     fill(153, 153, 0);
     ellipse(x + 228, y + 330, 130, 40);
 
@@ -173,8 +173,8 @@ function drawgold() {
 
 function checkCollision() {
     // Red circle's bottom center
-    let circleBottomX = x + 228; // Center of the red circle horizontally
-    let circleBottomY = y + 330; // Vertical position of the red circle's bottom
+    let circleBottomX = x + 228; // position x (like in line 158)
+    let circleBottomY = y + 330; // position y (like in line 158)
 
     // Check if the red circle is touching the gold
     if (
