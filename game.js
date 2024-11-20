@@ -1,4 +1,4 @@
-/ Variables for game state and button dimensions
+// Variables for game state and button dimensions
 let gameState = "start"; // Possible states: "start", "game", "end"
 let buttonX = 110;
 let buttonY = 450;
