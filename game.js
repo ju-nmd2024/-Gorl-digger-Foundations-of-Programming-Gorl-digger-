@@ -24,6 +24,10 @@ let thrustingDown = false;
 let thrustingLeft = false;
 let thrustingRight = false;
 
+// Alignment timer
+let alignmentTimer = 0; // Track alignment time
+let requiredTime = 240; // Frames to win (e.g., 4 seconds at 60 FPS)
+
 function setup() {
     createCanvas(700, 700);
     resetGame();
@@ -34,8 +38,8 @@ function draw() {
         startScreen();
     } else if (gameState === "game") {
         gameScreen();
-    } else if (gameState === "result") {
-        resultScreen();
+    } else if (gameState === "end") {
+        endScreen();
     }
 }
 
@@ -58,11 +62,11 @@ function gameScreen() {
 
     // Check for game states
     if (isWin) {
-        gameState = "result";
+        gameState = "end";
         return;
     }
     if (isLose) {
-        gameState = "result";
+        gameState = "end";
         return;
     }
 
@@ -70,16 +74,16 @@ function gameScreen() {
     ay = gravity;
 
     // Apply thrust
-    if (thrustingUp) ay -= thrust;
-    if (thrustingDown) ay += thrust;
-    if (thrustingLeft) ax = -thrust;
-    if (thrustingRight) ax = thrust;
+    if (thrustingUp) ay += thrust;
+    if (thrustingDown) ay -= thrust;
+    if (thrustingLeft) ax = thrust;
+    if (thrustingRight) ax = -thrust;
 
     // Update velocity and position
-    vy += ay;//thrust according to x
-    vx += ax;//thrust according to y
-    y += vy;// movement y
-    x += vx;// movement x
+    vy += ay;
+    vx += ax;
+    y += vy;
+    x += vx;
 
     // Reset horizontal acceleration
     ax = 0;
@@ -90,16 +94,16 @@ function gameScreen() {
     checkCollision();
 }
 
-function resultScreen() {
+function endScreen() {
     background(6, 66, 115);
     fill(238, 210, 2);
     textSize(60);
 
     // Display win/lose message
     if (isWin) {
-        text(" Win!", 200, 300);
+        text("You Win!", 200, 300);
     } else {
-        text(" Lose!", 200, 300);
+        text("You Lose!", 200, 300);
     }
 
     // Draw the restart button
@@ -111,7 +115,7 @@ function resultScreen() {
 }
 
 function mousePressed() {
-    if (gameState === "start" || gameState === "result") {
+    if (gameState === "start" || gameState === "end") {
         // Check if mouse is over the button
         if (
             mouseX > buttonX &&
@@ -121,14 +125,14 @@ function mousePressed() {
         ) {
             if (gameState === "start") {
                 gameState = "game"; // Move to game screen
-            } else if (gameState === "result") {
+            } else if (gameState === "end") {
                 resetGame(); // Reset the game
                 gameState = "start"; // Move to start screen
             }
         }
     }
 }
-// reset for the new game
+
 function resetGame() {
     x = width / 2; // Start position
     y = 50;
@@ -138,6 +142,7 @@ function resetGame() {
     ay = 0;
     isWin = false;
     isLose = false;
+    alignmentTimer = 0; // Reset timer
 }
 
 function drawboat(x, y) {
@@ -148,14 +153,13 @@ function drawboat(x, y) {
     fill(255, 255, 130);
     arc(x + 230, y + 200, 400, 250, radians(90), radians(270));
     fill(204, 204, 0);
-    square(x + 329, y + 227, 65, 20, 20, 200, 20);
     fill(102, 102, 0);
     ellipse(x + 339, y + 252, 6);
 
     // Sucking machine (red circle at bottom)
     strokeWeight(2);
     fill(255, 0, 0);
-    ellipse(x + 228, y + 330, 150, 60); // Red circle to check collision
+    ellipse(x + 228, y + 330, 150, 60); // Red part to check collision
     fill(153, 153, 0);
     ellipse(x + 228, y + 330, 130, 40);
 
@@ -173,18 +177,25 @@ function drawgold() {
 
 function checkCollision() {
     // Red circle's bottom center
-    let circleBottomX = x + 228; // position x (like in line 158)
-    let circleBottomY = y + 330; // position y (like in line 158)
+    let circleBottomX = x + 228; // Center of the red circle horizontally
+    let circleBottomY = y + 330; // Vertical position of the red circle's bottom
+    let margin = 20; // Stricter margin for touching gold
 
-    // Check if the red circle is touching the gold
     if (
-        circleBottomY >= goldY && // Bottom is at or below gold's top edge
-        circleBottomY <= goldY + goldHeight && // Bottom is above gold's bottom edge
-        circleBottomX >= goldX && // Bottom is at or right of gold's left edge
-        circleBottomX <= goldX + goldWidth // Bottom is at or left of gold's right edge
+        circleBottomY >= goldY + margin &&
+        circleBottomY <= goldY + goldHeight - margin &&
+        circleBottomX >= goldX + margin &&
+        circleBottomX <= goldX + goldWidth - margin
     ) {
-        isWin = true;
-    } else if (
+        alignmentTimer++;
+        if (alignmentTimer >= requiredTime) {
+            isWin = true;
+        }
+    } else {
+        alignmentTimer = 0; // Reset timer if not aligned
+    }
+
+    if (
         circleBottomY > goldY + goldHeight || // Below the gold
         circleBottomX < goldX || // Left of the gold
         circleBottomX > goldX + goldWidth // Right of the gold
